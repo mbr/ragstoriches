@@ -15,21 +15,21 @@ def run_scraper():
     parser = argparse.ArgumentParser()
     parser.add_argument('target', help='Target to run.')
     parser.add_argument('url', help='The url to start scraping at', nargs='?')
-    parser.add_argument('-m', '--module', help='Target is a module.',
-                        action='store_const', const='module',
-                        dest='targettype')
-    parser.add_argument('-f', '--file', help='Target is a file (the default).',
-                        dest='targettype', action='store_const', const='file')
-    parser.add_argument('-s', '--scraper', help='Name of the scraper to start'
-                                                ' with.', default='index')
-    parser.add_argument('-r', '--requests', help='Maximum number of requests '
-                                                 'active at the same time.',
-                        default=10, type=int)
-    parser.add_argument('-e', '--encoding', help='When stdout is redirected, '
-                                                 'change output encoding to '
-                                                 'this (default: utf-8). Set '
-                                                 ' to empty string to '
-                                                 'disable.', default='utf8')
+    parser.add_argument('-e', '--encoding', default='utf8',
+                        help='When stdout is redirected, change output '\
+                             'encoding to this (default: utf-8). Set to '\
+                             'empty string to disable.')
+    parser.add_argument('-f', '--file', dest='targettype',
+                        action='store_const', const='file',
+                        help='Target is a file (the default).')
+    parser.add_argument('-m', '--module', action='store_const', const='module',
+                        dest='targettype',
+                        help='Target is a module.')
+    parser.add_argument('-r', '--requests', default=10, type=int,
+                        help='Maximum number of requests active at the same '\
+                             'time.')
+    parser.add_argument('-s', '--scraper', default='index',
+                        help='Name of the scraper to start with.')
     parser.set_defaults(targettype='autodetect')
     args = parser.parse_args()
 
