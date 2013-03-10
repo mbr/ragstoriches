@@ -8,7 +8,7 @@ from ragstoriches import Scraper
 rr = Scraper('Sample scraper')
 
 @rr.scraper
-def index(requests, context, url):
+def index(requests, context, url='http://localhost:5000'):
     data = requests.get(url).json()
     for i in data:
         yield 'lucky_number', context, urljoin(url, '/lucky-number-%d' % i)

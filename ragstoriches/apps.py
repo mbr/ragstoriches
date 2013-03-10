@@ -30,5 +30,4 @@ def run_scraper():
         mod = importlib.import_module(args.target)
 
     scraper = mod.rr
-
-    scraper.scrape('http://localhost:5000')
+    scraper.scrape()

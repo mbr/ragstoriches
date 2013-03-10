@@ -29,7 +29,7 @@ class Scraper(object):
         self.scrapers[_.__name__] = _
         return _
 
-    def scrape(self, url, scraper_name='index', context=None,
+    def scrape(self, url=None, scraper_name='index', context=None,
                session=None, concurrency=None):
         pool = Pool(concurrency+1 if concurrency != None else None)
         job_queue = JoinableQueue()
@@ -48,6 +48,21 @@ class Scraper(object):
             scraper_name, context, url = job
             try:
                 scraper = self.scrapers[scraper_name]
+
+                if not url:
+                    log.debug('Using default argument for url')
+                    fargs, _, _, fdefaults = inspect.getargspec(scraper)
+                    if not fdefaults:
+                        raise TypeError('Scraper %r does not have an argument '
+                                        '\'url\'.' % scraper)
+                    fargs_with_defaults = fargs[-len(fdefaults):]
+
+                    if not 'url' in fargs_with_defaults:
+                        raise TypeError('Scraper %r does not have a default '
+                                        'value for \'url\'' % scraper)
+
+                    url = fdefaults[fargs_with_defaults.index('url')]
+
 
                 log.debug("Calling scraper %s on %s with context %r'" % (
                     scraper.__name__, url, context
