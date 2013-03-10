@@ -19,6 +19,9 @@ def run_scraper():
                         dest='targettype', action='store_const', const='file')
     parser.add_argument('-s', '--scraper', help='Name of the scraper to start'
                                                 ' with.', default='index')
+    parser.add_argument('-r', '--requests', help='Maximum number of requests '
+                                                 'active at the same time.',
+                        default=10, type=int)
     parser.set_defaults(targettype='autodetect')
     args = parser.parse_args()
 
@@ -34,4 +37,5 @@ def run_scraper():
 
     scraper = mod.rr
     scraper.scrape(url=args.url,
-                   scraper_name=args.scraper)
+                   scraper_name=args.scraper,
+                   concurrency=args.requests)
