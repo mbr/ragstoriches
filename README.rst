@@ -60,7 +60,7 @@ to a file::
 
 Try giving different urls for this scraper on the command-line:
 
-.. code-block:: shell
+.. code-block:: sh
 
    ragstoriches craigs.py http://newyork.craigslist.org/mnh/acc/ > output.md # hustle
    ragstoriches craigs.py http://orangecounty.craigslist.org/wet/ > output.md # writing OC
