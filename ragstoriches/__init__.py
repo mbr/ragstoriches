@@ -3,6 +3,7 @@
 
 import functools
 import inspect
+import traceback
 
 from gevent.pool import Pool
 from gevent.queue import JoinableQueue
@@ -58,8 +59,9 @@ class Scraper(object):
                     if new_job:
                         job_queue.put(new_job)
             except Exception as e:
-                log.exception('Error handling job %s %s: %s' %
+                log.error('Error handling job "%s" "%s": %s' %
                               (scraper_name, url, e))
+                log.debug(traceback.format_exc())
             finally:
                 job_queue.task_done()
 
