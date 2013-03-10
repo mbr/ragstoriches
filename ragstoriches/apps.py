@@ -25,6 +25,11 @@ def run_scraper():
     parser.add_argument('-r', '--requests', help='Maximum number of requests '
                                                  'active at the same time.',
                         default=10, type=int)
+    parser.add_argument('-e', '--encoding', help='When stdout is redirected, '
+                                                 'change output encoding to '
+                                                 'this (default: utf-8). Set '
+                                                 ' to empty string to '
+                                                 'disable.', default='utf8')
     parser.set_defaults(targettype='autodetect')
     args = parser.parse_args()
 
@@ -39,9 +44,9 @@ def run_scraper():
         mod = importlib.import_module(args.target)
 
     # setup stdout
-    if not sys.stdout.isatty():
+    if args.encoding and not sys.stdout.isatty():
         reload(sys)
-        sys.setdefaultencoding('utf-8')
+        sys.setdefaultencoding(args.encoding)
 
 
     scraper = mod.rr
