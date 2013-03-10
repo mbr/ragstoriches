@@ -62,8 +62,8 @@ Try giving different urls for this scraper on the command-line:
 
 .. code-block:: sh
 
-   ragstoriches craigs.py http://newyork.craigslist.org/mnh/acc/ > output.md # hustle
-   ragstoriches craigs.py http://orangecounty.craigslist.org/wet/ > output.md # writing OC
+   ragstoriches craigs.py http://newyork.craigslist.org/mnh/acc/ > output.md  # hustle
+   ragstoriches craigs.py http://orangecounty.craigslist.org/wet/ > output.md  # writing OC
    ragstoriches craigs.py http://seattle.craigslist.org/w4m/ > output.md  # sleepless in seattle
 
 There are a lot of commandline-options available, see ``ragstoriches --help``
