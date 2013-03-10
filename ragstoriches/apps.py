@@ -17,6 +17,8 @@ def run_scraper():
                         dest='targettype')
     parser.add_argument('-f', '--file', help='Target is a file (the default).',
                         dest='targettype', action='store_const', const='file')
+    parser.add_argument('-s', '--scraper', help='Name of the scraper to start'
+                                                ' with.', default='index')
     parser.set_defaults(targettype='autodetect')
     args = parser.parse_args()
 
@@ -31,4 +33,5 @@ def run_scraper():
         mod = importlib.import_module(args.target)
 
     scraper = mod.rr
-    scraper.scrape(args.url)
+    scraper.scrape(url=args.url,
+                   scraper_name=args.scraper)
