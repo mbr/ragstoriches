@@ -10,7 +10,9 @@ from ragstoriches.scraper import Scraper
 rr = Scraper(__name__)
 
 @rr.scraper
-def index(requests, context, url):
+def index(requests, context,
+    url='http://eastidaho.craigslist.org/search/act?query=+'):
+
     soup = BeautifulSoup(requests.get(url).text)
 
     # progress looks a bit nicer if we fetch all indexes first
