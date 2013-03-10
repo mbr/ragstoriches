@@ -98,8 +98,8 @@ Good friends of ``ragstoriches`` are the `urlparse.urljoin
 and `BeautifulSoup4 <https://beautiful-soup-4.readthedocs.org/en/latest/>`_.
 
 
-Use as a library
-----------------
+Usage as a library
+------------------
 
 You can use ragstoriches as a library as well by not using the commandline
 tools but simply importing a scraper and running it with the ``scrape()``
