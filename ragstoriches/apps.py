@@ -11,6 +11,7 @@ def run_scraper():
     """Runs a specified scraper module."""
     parser = argparse.ArgumentParser()
     parser.add_argument('target', help='Target to run.')
+    parser.add_argument('url', help='The url to start scraping at', nargs='?')
     parser.add_argument('-m', '--module', help='Target is a module.',
                         action='store_const', const='module',
                         dest='targettype')
@@ -30,4 +31,4 @@ def run_scraper():
         mod = importlib.import_module(args.target)
 
     scraper = mod.rr
-    scraper.scrape()
+    scraper.scrape(args.url)
