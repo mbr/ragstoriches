@@ -11,11 +11,11 @@ rr = Scraper(__name__)
 
 @rr.scraper
 def index(requests, context, url):
+    soup = BeautifulSoup(requests.get(url).text)
     nextpage = soup.find(class_='nextpage')
     if nextpage:
         yield 'index', context, urljoin(url, nextpage.find('a').attrs['href'])
 
-    soup = BeautifulSoup(requests.get(url).text)
     for row in soup.find_all(class_='row'):
         yield 'posting', context, urljoin(url, row.find('a').attrs['href'])
 
