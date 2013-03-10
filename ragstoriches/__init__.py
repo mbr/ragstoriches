@@ -41,7 +41,7 @@ class Scraper(object):
         def run_job(job):
             # runs a single job in the current greenlet
             if not len(job) == 3:
-                log.error('Malformed job (must be 3-tuple): %r' % job)
+                log.error('Malformed job (must be 3-tuple): %r' % (job,))
                 job_queue.task_done()
                 return
 
