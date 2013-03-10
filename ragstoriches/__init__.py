@@ -58,7 +58,7 @@ class Scraper(object):
                     if new_job:
                         job_queue.put(new_job)
             except Exception as e:
-                log.exception('Error handling job %s %s: %e' %
+                log.exception('Error handling job %s %s: %s' %
                               (scraper_name, url, e))
             finally:
                 job_queue.task_done()
