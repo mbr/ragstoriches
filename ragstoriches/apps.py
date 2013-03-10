@@ -7,6 +7,8 @@ import importlib
 import os
 import sys
 
+import logbook
+
 def run_scraper():
     import gevent.monkey
     gevent.monkey.patch_all()
@@ -15,6 +17,10 @@ def run_scraper():
     parser = argparse.ArgumentParser()
     parser.add_argument('target', help='Target to run.')
     parser.add_argument('url', help='The url to start scraping at', nargs='?')
+    parser.add_argument('-d', '--debug', action='store_const',
+                        const=logbook.DEBUG, dest='loglevel',
+                        help='Show debugging output (useful when writing '\
+                             'scrapers.')
     parser.add_argument('-e', '--encoding', default='utf8',
                         help='When stdout is redirected, change output '\
                              'encoding to this (default: utf-8). Set to '\
@@ -30,8 +36,14 @@ def run_scraper():
                              'time.')
     parser.add_argument('-s', '--scraper', default='index',
                         help='Name of the scraper to start with.')
-    parser.set_defaults(targettype='autodetect')
+    parser.add_argument('-q', '--quiet', action='store_const',
+                        const=logbook.WARNING, dest='loglevel',
+                        help='Only output errors.')
+    parser.set_defaults(targettype='autodetect', loglevel=logbook.INFO)
     args = parser.parse_args()
+
+    logbook.handlers.NullHandler().push_application()
+    logbook.handlers.StderrHandler(level=args.loglevel).push_application()
 
     targettype = args.targettype
 
