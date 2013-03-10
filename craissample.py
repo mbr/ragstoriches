@@ -12,6 +12,8 @@ rr = Scraper(__name__)
 @rr.scraper
 def index(requests, context, url):
     soup = BeautifulSoup(requests.get(url).text)
+
+    # progress looks a bit nicer if we fetch all indexes first
     nextpage = soup.find(class_='nextpage')
     if nextpage:
         yield 'index', context, urljoin(url, nextpage.find('a').attrs['href'])
@@ -23,12 +25,11 @@ def index(requests, context, url):
 @rr.scraper
 def posting(requests, context, url):
     soup = BeautifulSoup(requests.get(url).text)
-    title = soup.find(class_='postingtitle').text.strip()
     infos = soup.find(class_='postinginfos').find_all(class_='postinginfo')
 
+    title = soup.find(class_='postingtitle').text.strip()
     id = re.findall('\d+', infos[0].text)[0]
     date = infos[1].find('date').text.strip()
-
     body = soup.find(id='postingbody').text.strip()
 
     print title
