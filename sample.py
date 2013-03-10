@@ -3,7 +3,7 @@
 
 from urlparse import urljoin
 
-from ragstoriches import Scraper
+from ragstoriches.scraper import Scraper
 
 rr = Scraper('Sample scraper')
 

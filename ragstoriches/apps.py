@@ -6,8 +6,10 @@ import imp
 import importlib
 import os
 
-
 def run_scraper():
+    import gevent.monkey
+    gevent.monkey.patch_all()
+
     """Runs a specified scraper module."""
     parser = argparse.ArgumentParser()
     parser.add_argument('target', help='Target to run.')
@@ -34,6 +36,7 @@ def run_scraper():
         mod = imp.load_source('__ragstoriches_main', args.target)
     elif targettype == 'module':
         mod = importlib.import_module(args.target)
+
 
     scraper = mod.rr
     scraper.scrape(url=args.url,
