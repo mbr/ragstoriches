@@ -1,7 +1,9 @@
 from ragstoriches
 =================
 
-``ragstoriches`` is a combined library/framework to ease writing web scrapers.
+``ragstoriches`` is a combined library/framework to ease writing web scrapers
+using gevent and requests.
+
 A simple example to tell the story::
 
   #!/usr/bin/env python
@@ -44,7 +46,7 @@ A simple example to tell the story::
       print body
       print
 
-Install the library and `BeatifulSoup 4
+Install the library and `BeautifulSoup 4
 <https://pypi.python.org/pypi/beautifulsoup4>`_ using ``pip install
 ragstoriches beautifulsoup4``, then save the above as ``craigs.py``,
 finally run with ``ragstoriches craigs.py``.
@@ -62,3 +64,42 @@ Try giving different urls for this scraper on the command-line:
 
 There are a lot of commandline-options available, see ``ragstoriches --help``
 for a list.
+
+
+Writing scrapers
+----------------
+
+A scraper module consists of some initialization code and a number of
+subscrapers. Scraping starts by calling the a scraper named ``index`` on the
+scraper ``rr`` in the moduel (see the example above).
+
+The ``requests`` argument should be treated like the `requests
+<http://python-requests.org>`_ module (it actually is an instance of requests
+Pool). As long as you use it for fetching webpages, you never have to worry
+about blocking or exceeding concurrency limits.
+
+The ``context`` variable is arbitrary, but by convention a dictionary. It's a
+way of passing state from one scraper to another or sharing it. It is only
+passed on by ``ragstoriches`` and never touched otherwise.
+
+The ``url`` is the url to scrape and parse.
+
+Return values of scrapers are ignored. However, if a scraper is a generater
+(i.e. contains a yield statement), any value it yields must be a 3-tuple
+consisting of the name of a scraper, a context object and another url. These
+are added to the queue of jobs to scrape.
+
+Good friends of ``ragstoriches`` are the `urlparse.urljoin
+<http://docs.python.org/2/library/urlparse.html#urlparse.urljoin>`_ function
+and `BeautifulSoup4 <https://beautiful-soup-4.readthedocs.org/en/latest/>`_.
+
+
+Use as a library
+----------------
+
+You can use ragstoriches as a library as well by not using the commandline
+tools but simply importing a scraper and running it with the ``scrape()``
+method. Remember to monkey-patch using gevent first.
+
+See the source files for details, as there is not that much documentation
+available at this point.
