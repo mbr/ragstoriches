@@ -5,6 +5,7 @@ import argparse
 import imp
 import importlib
 import os
+import sys
 
 def run_scraper():
     import gevent.monkey
@@ -36,6 +37,11 @@ def run_scraper():
         mod = imp.load_source('__ragstoriches_main', args.target)
     elif targettype == 'module':
         mod = importlib.import_module(args.target)
+
+    # setup stdout
+    if not sys.stdout.isatty():
+        reload(sys)
+        sys.setdefaultencoding('utf-8')
 
 
     scraper = mod.rr
