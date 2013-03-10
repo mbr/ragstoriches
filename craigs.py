@@ -15,13 +15,12 @@ def index(requests, context,
 
     soup = BeautifulSoup(requests.get(url).text)
 
-    # progress looks a bit nicer if we fetch all indexes first
+    for row in soup.find_all(class_='row'):
+        yield 'posting', context, urljoin(url, row.find('a').attrs['href'])
+
     nextpage = soup.find(class_='nextpage')
     if nextpage:
         yield 'index', context, urljoin(url, nextpage.find('a').attrs['href'])
-
-    for row in soup.find_all(class_='row'):
-        yield 'posting', context, urljoin(url, row.find('a').attrs['href'])
 
 
 @rr.scraper
