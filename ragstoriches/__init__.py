@@ -35,7 +35,7 @@ class Scraper(object):
         context = context or {}
         session = session or requests.Session()
 
-        job_queue.put((scraper_name, url, context))
+        job_queue.put((scraper_name, context, url))
 
         def run_job(job):
             # runs a single job in the current greenlet
@@ -44,7 +44,7 @@ class Scraper(object):
                 job_queue.task_done()
                 return
 
-            scraper_name, url, context = job
+            scraper_name, context, url = job
             try:
                 scraper = self.scrapers[scraper_name]
 
@@ -54,7 +54,7 @@ class Scraper(object):
                 log.info(url)
                 log.debug('Queue size: %d' % job_queue.qsize())
 
-                for new_job in scraper(session, url, context):
+                for new_job in scraper(session, context, url):
                     if new_job:
                         job_queue.put(new_job)
             except Exception as e:
