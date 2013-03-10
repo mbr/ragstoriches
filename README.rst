@@ -4,7 +4,9 @@ from ragstoriches
 ``ragstoriches`` is a combined library/framework to ease writing web scrapers
 using gevent and requests.
 
-A simple example to tell the story::
+A simple example to tell the story:
+
+.. code-block:: python
 
   #!/usr/bin/env python
   # -*- coding: utf-8 -*-
