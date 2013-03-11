@@ -8,6 +8,7 @@ import os
 import sys
 
 import logbook
+import requests_cache
 
 def run_scraper():
     import gevent.monkey
@@ -17,6 +18,9 @@ def run_scraper():
     parser = argparse.ArgumentParser()
     parser.add_argument('target', help='Target to run.')
     parser.add_argument('url', help='The url to start scraping at', nargs='?')
+    parser.add_argument('-c', '--cache',
+                        help='Use a cache with this name to avoid '
+                             'redownloading pages.')
     parser.add_argument('-d', '--debug', action='store_const',
                         const=logbook.DEBUG, dest='loglevel',
                         help='Show debugging output (useful when writing '\
@@ -60,8 +64,12 @@ def run_scraper():
         reload(sys)
         sys.setdefaultencoding(args.encoding)
 
+    session = None
+    if args.cache:
+        session = requests_cache.CachedSession(args.cache)
 
     scraper = mod.rr
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
-                   concurrency=args.requests)
+                   concurrency=args.requests,
+                   session=session)

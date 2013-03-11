@@ -98,6 +98,14 @@ Good friends of ``ragstoriches`` are the `urlparse.urljoin
 and `BeautifulSoup4 <https://beautiful-soup-4.readthedocs.org/en/latest/>`_.
 
 
+Caching
+-------
+
+You can transparently cache downloaded data, this is especially useful when
+developing. Simply pass ``--cache some_name`` to ``ragstoriches``, which will
+use `requests-cache <https://github.com/reclosedev/requests-cache>`_ for
+caching.
+
 Usage as a library
 ------------------
 

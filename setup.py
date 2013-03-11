@@ -19,7 +19,7 @@ setup(
     author_email='git@marcbrinkmann.de',
     url='http://github.com/mbr/ragstoriches',
     license='MIT',
-    install_requires=['gevent', 'logbook', 'requests'],
+    install_requires=['gevent', 'logbook', 'requests', 'requests_cache'],
     packages=find_packages(exclude=['test']),
     entry_points={
         'console_scripts': [
