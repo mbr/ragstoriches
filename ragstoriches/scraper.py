@@ -18,16 +18,8 @@ class Scraper(object):
         self.scrapers = {}
 
     def scraper(self, f):
-        if not inspect.isgeneratorfunction(f):
-            @functools.wraps(f)
-            def _(*args, **kwargs):
-                yield f(*args, **kwargs)
-        else:
-            _ = f
-
-
-        self.scrapers[_.__name__] = _
-        return _
+        self.scrapers[f.__name__] = f
+        return f
 
     def scrape(self, url=None, scraper_name='index', context=None,
                session=None, concurrency=None):
@@ -70,9 +62,12 @@ class Scraper(object):
                 log.info(url)
                 log.debug('Queue size: %d' % job_queue.qsize())
 
-                for new_job in scraper(session, context, url):
-                    if new_job:
-                        job_queue.put(new_job)
+                if not inspect.isgeneratorfunction(scraper):
+                    scraper(session, context, url)
+                else:
+                    for new_job in scraper(session, context, url):
+                        if new_job:
+                            job_queue.put(new_job)
             except Exception as e:
                 log.error('Error handling job "%s" "%s": %s' %
                               (scraper_name, url, e))
