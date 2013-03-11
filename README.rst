@@ -75,7 +75,7 @@ Writing scrapers
 
 A scraper module consists of some initialization code and a number of
 subscrapers. Scraping starts by calling the a scraper named ``index`` on the
-scraper ``rr`` in the moduel (see the example above).
+scraper ``rr`` in the module (see the example above).
 
 The ``requests`` argument should be treated like the `requests
 <http://python-requests.org>`_ module (it actually is an instance of requests
