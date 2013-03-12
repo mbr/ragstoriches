@@ -10,6 +10,9 @@ import sys
 import logbook
 import requests_cache
 
+from scraper import Scraper
+from receiver import Receiver
+
 def module_type(path):
     if path.endswith('.py') and os.path.exists(path) and os.path.isfile(path):
         name = os.path.basename(path)[:-3]
@@ -23,7 +26,8 @@ def run_scraper():
 
     """Runs a specified scraper module."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('target', help='Target to run.', type=module_type)
+    parser.add_argument('targets', type=module_type, nargs='+',
+                        help='Targets to run.')
     parser.add_argument('url', help='The url to start scraping at', nargs='?')
     parser.add_argument('-c', '--cache',
                         help='Use a cache with this name to avoid '
@@ -44,13 +48,11 @@ def run_scraper():
     parser.add_argument('-q', '--quiet', action='store_const',
                         const=logbook.WARNING, dest='loglevel',
                         help='Only output errors.')
-    parser.set_defaults(targettype='autodetect', loglevel=logbook.INFO)
+    parser.set_defaults(loglevel=logbook.INFO)
     args = parser.parse_args()
 
     logbook.handlers.NullHandler().push_application()
     logbook.handlers.StderrHandler(level=args.loglevel).push_application()
-
-    targettype = args.targettype
 
     # setup stdout
     if args.encoding and not sys.stdout.isatty():
@@ -61,8 +63,20 @@ def run_scraper():
     if args.cache:
         session = requests_cache.CachedSession(args.cache)
 
-    scraper = args.target.scraper
+    scraper = None
+    receivers = []
+    for mod in args.targets:
+        if hasattr(mod, 'scraper'):
+            if scraper != None:
+                raise Exception('Too many scrapers!')
+            scraper = mod.scraper
+
+        for name, obj in mod.__dict__.iteritems():
+            if isinstance(obj, Receiver):
+                receivers.append(obj)
+
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
                    concurrency=args.requests,
-                   session=session)
+                   session=session,
+                   receivers=receivers)

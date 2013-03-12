@@ -26,12 +26,16 @@ class Scraper(object):
         return f
 
     def scrape(self, url=None, scraper_name='index',
-               session=None, concurrency=None, **kwargs):
-        pool = Pool(concurrency+1 if concurrency != None else None)
+               session=None, concurrency=None, receivers=[],
+               **kwargs):
+        pool = Pool(concurrency+2 if concurrency != None else None)
         job_queue = JoinableQueue()
+        data_queue = JoinableQueue()
 
         scope = Scope()
         scope['requests'] = session or requests.Session()
+        scope['data'] = lambda name, *args, **kwargs:\
+            data_queue.put((name, args, kwargs))
         scope.update(kwargs)
 
         job_queue.put((scraper_name, url, scope))
@@ -81,7 +85,7 @@ class Scraper(object):
             finally:
                 job_queue.task_done()
 
-        def spawner():
+        def job_spawner():
             # using the pool, spawns a new job for every job in the queue
             while True:
                 job = job_queue.get()
@@ -89,11 +93,25 @@ class Scraper(object):
                     break
                 pool.spawn(run_job, job)
 
-        spawner_greenlet = pool.spawn(spawner)
+        def receiver_spawner():
+            while True:
+                record = data_queue.get()
+                if None == record:
+                    break
+
+                for receiver in receivers:
+                    pool.spawn(receiver.process, *record)
+
+                data_queue.task_done()
+
+        spawner_greenlet = pool.spawn(job_spawner)
+        receiver_greenlet = pool.spawn(receiver_spawner)
 
         # join queue
         job_queue.join()
+        data_queue.join()
 
         # tell spawner to exit
         job_queue.put(None)
+        data_queue.put(None)
         pool.join()
