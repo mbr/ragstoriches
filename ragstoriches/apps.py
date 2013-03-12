@@ -10,13 +10,20 @@ import sys
 import logbook
 import requests_cache
 
+def module_type(path):
+    if path.endswith('.py') and os.path.exists(path) and os.path.isfile(path):
+        name = os.path.basename(path)
+        return imp.load_source('__ragstoriches.%s' % name, path)
+    return importlib.import_module(path)
+
+
 def run_scraper():
     import gevent.monkey
     gevent.monkey.patch_all()
 
     """Runs a specified scraper module."""
     parser = argparse.ArgumentParser()
-    parser.add_argument('target', help='Target to run.')
+    parser.add_argument('target', help='Target to run.', type=module_type)
     parser.add_argument('url', help='The url to start scraping at', nargs='?')
     parser.add_argument('-c', '--cache',
                         help='Use a cache with this name to avoid '
@@ -29,12 +36,6 @@ def run_scraper():
                         help='When stdout is redirected, change output '\
                              'encoding to this (default: utf-8). Set to '\
                              'empty string to disable.')
-    parser.add_argument('-f', '--file', dest='targettype',
-                        action='store_const', const='file',
-                        help='Target is a file (the default).')
-    parser.add_argument('-m', '--module', action='store_const', const='module',
-                        dest='targettype',
-                        help='Target is a module.')
     parser.add_argument('-r', '--requests', default=10, type=int,
                         help='Maximum number of requests active at the same '\
                              'time.')
@@ -51,14 +52,6 @@ def run_scraper():
 
     targettype = args.targettype
 
-    if targettype == 'autodetect':
-        targettype = 'file' if os.path.exists(args.target) else 'module'
-
-    if targettype == 'file':
-        mod = imp.load_source('__ragstoriches_main', args.target)
-    elif targettype == 'module':
-        mod = importlib.import_module(args.target)
-
     # setup stdout
     if args.encoding and not sys.stdout.isatty():
         reload(sys)
@@ -68,7 +61,7 @@ def run_scraper():
     if args.cache:
         session = requests_cache.CachedSession(args.cache)
 
-    scraper = mod.rr
+    scraper = args.target.rr
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
                    concurrency=args.requests,
