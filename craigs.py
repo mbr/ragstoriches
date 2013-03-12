@@ -10,21 +10,20 @@ from ragstoriches.scraper import Scraper
 rr = Scraper(__name__)
 
 @rr.scraper
-def index(requests, context,
-    url='http://eastidaho.craigslist.org/search/act?query=+'):
+def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
 
     soup = BeautifulSoup(requests.get(url).text)
 
     for row in soup.find_all(class_='row'):
-        yield 'posting', context, urljoin(url, row.find('a').attrs['href'])
+        yield 'posting', {}, urljoin(url, row.find('a').attrs['href'])
 
     nextpage = soup.find(class_='nextpage')
     if nextpage:
-        yield 'index', context, urljoin(url, nextpage.find('a').attrs['href'])
+        yield 'index', {}, urljoin(url, nextpage.find('a').attrs['href'])
 
 
 @rr.scraper
-def posting(requests, context, url):
+def posting(requests, url):
     soup = BeautifulSoup(requests.get(url).text)
     infos = soup.find(class_='postinginfos').find_all(class_='postinginfo')
 
