@@ -52,6 +52,15 @@ def test_overwrite_works():
     scope.inject_and_call(foo, 'val_d', e='val_e')
 
 
+def test_only_defaults():
+    def foo(a='val_a', b='val_b'):
+        assert a == 'val_a'
+        assert b == 'val_b'
+
+    scope = Scope()
+    scope.inject_and_call(foo)
+
+
 def test_get_default_args():
     def f1(a, b, c):
         pass
