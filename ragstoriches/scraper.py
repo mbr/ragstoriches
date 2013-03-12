@@ -21,7 +21,7 @@ class Scraper(object):
     def __init__(self, name='Unnamed Scraper'):
         self.scrapers = {}
 
-    def scraper(self, f):
+    def __call__(self, f):
         self.scrapers[f.__name__] = f
         return f
 

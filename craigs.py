@@ -6,9 +6,9 @@ import re
 from lxml.html import document_fromstring
 from ragstoriches.scraper import Scraper
 
-rr = Scraper(__name__)
+scraper = Scraper(__name__)
 
-@rr.scraper
+@scraper
 def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
     html = document_fromstring(requests.get(url).content)
 
@@ -20,7 +20,7 @@ def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
         yield 'index', nextpage[0].get('href')
 
 
-@rr.scraper
+@scraper
 def posting(requests, url):
     html = document_fromstring(requests.get(url).content)
 

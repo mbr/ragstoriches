@@ -61,7 +61,7 @@ def run_scraper():
     if args.cache:
         session = requests_cache.CachedSession(args.cache)
 
-    scraper = args.target.rr
+    scraper = args.target.scraper
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
                    concurrency=args.requests,
