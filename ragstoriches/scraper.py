@@ -25,15 +25,16 @@ class Scraper(object):
         self.scrapers[f.__name__] = f
         return f
 
-    def scrape(self, url=None, scraper_name='index', context=None,
-               session=None, concurrency=None):
+    def scrape(self, url=None, scraper_name='index',
+               session=None, concurrency=None, **kwargs):
         pool = Pool(concurrency+1 if concurrency != None else None)
         job_queue = JoinableQueue()
 
         scope = Scope()
         scope['requests'] = session or requests.Session()
+        scope.update(kwargs)
 
-        job_queue.put((scraper_name, url, context))
+        job_queue.put((scraper_name, url, scope))
 
         def run_job(job):
             # runs a single job in the current greenlet
@@ -42,10 +43,7 @@ class Scraper(object):
                 job_queue.task_done()
                 return
 
-            scraper_name, url, context = job
-            job_scope = scope.new_child()
-            if context:
-                job_scope.update(context)
+            scraper_name, url, job_scope = job
             try:
                 scraper = self.scrapers[scraper_name]
 
@@ -66,8 +64,10 @@ class Scraper(object):
                 log.debug('Queue size: %d' % job_queue.qsize())
                 log.info(url)
 
-                def parse_yield(scraper_name, rel_url=url, new_context=None):
-                    return scraper_name, urljoin(url, rel_url), new_context
+                def parse_yield(scraper_name, rel_url=url, new_context={}):
+                    scope = job_scope.new_child()
+                    scope.update(new_context)
+                    return scraper_name, urljoin(url, rel_url), scope
 
                 if not inspect.isgeneratorfunction(scraper):
                     job_scope.inject_and_call(scraper, url=url)
