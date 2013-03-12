@@ -4,6 +4,8 @@
 import functools
 import inspect
 import traceback
+from urlparse import urljoin
+
 
 from gevent.pool import Pool
 from gevent.queue import JoinableQueue
@@ -32,7 +34,7 @@ class Scraper(object):
         scope['requests'] = session or requests.Session()
         scope['context'] = context or {}
 
-        job_queue.put((scraper_name, context, url))
+        job_queue.put((scraper_name, url, context))
 
         def run_job(job):
             # runs a single job in the current greenlet
@@ -41,7 +43,9 @@ class Scraper(object):
                 job_queue.task_done()
                 return
 
-            scraper_name, context, url = job
+            scraper_name, url, context = job
+            job_scope = scope.new_child()
+            job_scope['context'] = context
             try:
                 scraper = self.scrapers[scraper_name]
 
@@ -62,12 +66,14 @@ class Scraper(object):
                 log.debug('Queue size: %d' % job_queue.qsize())
                 log.info(url)
 
+                def parse_yield(scraper_name, rel_url=url, new_context={}):
+                    return scraper_name, urljoin(url, rel_url), new_context
+
                 if not inspect.isgeneratorfunction(scraper):
-                    scope.inject_and_call(scraper, url=url)
+                    job_scope.inject_and_call(scraper, url=url)
                 else:
-                    for new_job in scope.inject_and_call(scraper, url=url):
-                        if new_job:
-                            job_queue.put(new_job)
+                    for new_job in job_scope.inject_and_call(scraper, url=url):
+                        job_queue.put(parse_yield(*new_job))
             except Exception as e:
                 log.error('Error handling job "%s" "%s": %s' %
                               (scraper_name, url, e))
