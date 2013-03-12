@@ -19,21 +19,20 @@ A simple example to tell the story:
 
   rr = Scraper(__name__)
 
-  @rr.scraper
-  def index(requests, context,
-            url='http://eastidaho.craigslist.org/search/act?query=+'):
+  @rr
+  def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
       soup = BeautifulSoup(requests.get(url).text)
 
       for row in soup.find_all(class_='row'):
-          yield 'posting', context, urljoin(url, row.find('a').attrs['href'])
+          yield 'posting', urljoin(url, row.find('a').attrs['href'])
 
       nextpage = soup.find(class_='nextpage')
       if nextpage:
-          yield 'index', context, urljoin(url, nextpage.find('a').attrs['href'])
+          yield 'index', urljoin(url, nextpage.find('a').attrs['href'])
 
 
-  @rr.scraper
-  def posting(requests, context, url):
+  @rr
+  def posting(requests, url):
       soup = BeautifulSoup(requests.get(url).text)
       infos = soup.find(class_='postinginfos').find_all(class_='postinginfo')
 
@@ -82,15 +81,11 @@ The ``requests`` argument should be treated like the `requests
 Pool). As long as you use it for fetching webpages, you never have to worry
 about blocking or exceeding concurrency limits.
 
-The ``context`` variable is arbitrary, but by convention a dictionary. It's a
-way of passing state from one scraper to another or sharing it. It is only
-passed on by ``ragstoriches`` and never touched otherwise.
-
 The ``url`` is the url to scrape and parse.
 
 Return values of scrapers are ignored. However, if a scraper is a generater
-(i.e. contains a yield statement), any value it yields must be a 3-tuple
-consisting of the name of a scraper, a context object and another url. These
+(i.e. contains a yield statement), any value it yields must be at least a
+2-tuple consisting of the name of a scraper and another url. These
 are added to the queue of jobs to scrape.
 
 Good friends of ``ragstoriches`` are the `urlparse.urljoin
