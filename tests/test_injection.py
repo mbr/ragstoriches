@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from ragstoriches.injection import Scope
+from ragstoriches.injection import Scope, get_default_args
 
 
 def test_works_like_dict():
@@ -50,3 +50,26 @@ def test_overwrite_works():
     scope['f'] = 'val_f'
 
     scope.inject_and_call(foo, 'val_d', e='val_e')
+
+
+def test_get_default_args():
+    def f1(a, b, c):
+        pass
+
+    def f2(a, b='b_def', c='c_def'):
+        pass
+
+    def f3(a, *args, **kwargs):
+        pass
+
+    def f4(a='a_def', b='b_def'):
+        pass
+
+    def f5():
+        pass
+
+    assert get_default_args(f1) == {}
+    assert get_default_args(f2) == { 'b': 'b_def', 'c': 'c_def' }
+    assert get_default_args(f3) == {}
+    assert get_default_args(f4) == { 'a': 'a_def', 'b': 'b_def'}
+    assert get_default_args(f5) == {}

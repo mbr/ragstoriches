@@ -6,7 +6,7 @@ import inspect
 
 class Scope(ChainMap):
     def inject_and_call(self, func, *args, **kwargs):
-        func_args = inspect.getargs(func.func_code)
+        func_args = inspect.getargspec(func)
 
         call_kwargs = kwargs.copy()
 
@@ -17,3 +17,11 @@ class Scope(ChainMap):
                 call_kwargs[arg_name] = self[arg_name]
 
         return func(*args, **call_kwargs)
+
+
+def get_default_args(func):
+    argspec = inspect.getargspec(func)
+
+    if not argspec.defaults:
+        return {}
+    return dict(zip(reversed(argspec.args), reversed(argspec.defaults)))
