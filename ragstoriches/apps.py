@@ -44,7 +44,7 @@ def run_scraper():
                         help='Maximum number of requests active at the same '\
                              'time.')
     parser.add_argument('-s', '--scraper', default='index',
-                        help='Name of the scraper to start with.')
+                        help='Name of the scraper entry point.')
     parser.add_argument('-q', '--quiet', action='store_const',
                         const=logbook.WARNING, dest='loglevel',
                         help='Only output errors.')
