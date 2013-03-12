@@ -66,14 +66,14 @@ def run_scraper():
     scraper = None
     receivers = []
     for mod in args.targets:
-        if hasattr(mod, 'scraper'):
-            if scraper != None:
-                raise Exception('Too many scrapers!')
-            scraper = mod.scraper
-
         for name, obj in mod.__dict__.iteritems():
             if isinstance(obj, Receiver):
                 receivers.append(obj)
+
+            if isinstance(obj, Scraper):
+                if scraper != None:
+                    raise Exception('Too many scrapers!')
+                scraper = obj
 
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
