@@ -3,32 +3,31 @@
 
 import re
 
-from bs4 import BeautifulSoup
+from lxml.html import document_fromstring
 from ragstoriches.scraper import Scraper
 
 rr = Scraper(__name__)
 
 @rr.scraper
 def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
-    soup = BeautifulSoup(requests.get(url).text)
+    html = document_fromstring(requests.get(url).content)
 
-    for row in soup.find_all(class_='row'):
-        yield 'posting', row.find('a').attrs['href']
+    for ad_link in html.cssselect('.row a'):
+        yield 'posting', ad_link.get('href')
 
-    nextpage = soup.find(class_='nextpage')
+    nextpage = html.cssselect('.nextpage a')
     if nextpage:
-        yield 'index', nextpage.find('a').attrs['href']
+        yield 'index', nextpage[0].get('href')
 
 
 @rr.scraper
 def posting(requests, url):
-    soup = BeautifulSoup(requests.get(url).text)
-    infos = soup.find(class_='postinginfos').find_all(class_='postinginfo')
+    html = document_fromstring(requests.get(url).content)
 
-    title = soup.find(class_='postingtitle').text.strip()
-    id = re.findall('\d+', infos[0].text)[0]
-    date = infos[1].find('date').text.strip()
-    body = soup.find(id='postingbody').text.strip()
+    title = html.cssselect('.postingtitle')[0].text.strip()
+    id = re.findall(r'\d+', html.cssselect('div.postinginfos p')[0].text)[0]
+    date = html.cssselect('.postinginfos date')[0].text.strip()
+    body = html.cssselect('#postingbody')[0].text_content().strip()
 
     print title
     print '=' * len(title)
