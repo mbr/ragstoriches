@@ -10,7 +10,6 @@ rr = Scraper(__name__)
 
 @rr.scraper
 def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
-
     soup = BeautifulSoup(requests.get(url).text)
 
     for row in soup.find_all(class_='row'):
