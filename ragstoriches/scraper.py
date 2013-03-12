@@ -10,6 +10,8 @@ from gevent.queue import JoinableQueue
 import logbook
 import requests
 
+from injection import Scope, get_default_args
+
 log = logbook.Logger('ragstoriches')
 
 
@@ -25,8 +27,10 @@ class Scraper(object):
                session=None, concurrency=None):
         pool = Pool(concurrency+1 if concurrency != None else None)
         job_queue = JoinableQueue()
-        context = context or {}
-        session = session or requests.Session()
+
+        scope = Scope()
+        scope['requests'] = session or requests.Session()
+        scope['context'] = context or {}
 
         job_queue.put((scraper_name, context, url))
 
@@ -41,31 +45,27 @@ class Scraper(object):
             try:
                 scraper = self.scrapers[scraper_name]
 
+                # retrieve url from default arguments
                 if not url:
-                    log.debug('Using default argument for url')
-                    fargs, _, _, fdefaults = inspect.getargspec(scraper)
-                    if not fdefaults:
-                        raise TypeError('Scraper %r does not have an argument '
-                                        '\'url\'.' % scraper)
-                    fargs_with_defaults = fargs[-len(fdefaults):]
-
-                    if not 'url' in fargs_with_defaults:
+                    defargs = get_default_args(scraper)
+                    if not 'url' in defargs:
                         raise TypeError('Scraper %r does not have a default '
-                                        'value for \'url\'' % scraper)
+                                        'value for \'url\' and none was '
+                                        'supplied' % scraper)
 
-                    url = fdefaults[fargs_with_defaults.index('url')]
+                    url = defargs['url']
 
 
-                log.debug("Calling scraper %s on %s with context %r'" % (
-                    scraper.__name__, url, context
+                log.debug("Calling scraper %s on %s'" % (
+                    scraper.__name__, url
                 ))
-                log.info(url)
                 log.debug('Queue size: %d' % job_queue.qsize())
+                log.info(url)
 
                 if not inspect.isgeneratorfunction(scraper):
-                    scraper(session, context, url)
+                    scope.inject_and_call(scraper, url=url)
                 else:
-                    for new_job in scraper(session, context, url):
+                    for new_job in scope.inject_and_call(scraper, url=url):
                         if new_job:
                             job_queue.put(new_job)
             except Exception as e:
