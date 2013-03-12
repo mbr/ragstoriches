@@ -12,8 +12,8 @@ import requests_cache
 
 def module_type(path):
     if path.endswith('.py') and os.path.exists(path) and os.path.isfile(path):
-        name = os.path.basename(path)
-        return imp.load_source('__ragstoriches.%s' % name, path)
+        name = os.path.basename(path)[:-3]
+        return imp.load_source('rr_%s' % name, path)
     return importlib.import_module(path)
 
 
