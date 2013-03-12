@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from urlparse import urljoin
 import re
 
 from bs4 import BeautifulSoup
@@ -15,11 +14,11 @@ def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
     soup = BeautifulSoup(requests.get(url).text)
 
     for row in soup.find_all(class_='row'):
-        yield 'posting', {}, urljoin(url, row.find('a').attrs['href'])
+        yield 'posting', row.find('a').attrs['href']
 
     nextpage = soup.find(class_='nextpage')
     if nextpage:
-        yield 'index', {}, urljoin(url, nextpage.find('a').attrs['href'])
+        yield 'index', nextpage.find('a').attrs['href']
 
 
 @rr.scraper
