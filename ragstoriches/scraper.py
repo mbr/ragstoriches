@@ -32,7 +32,6 @@ class Scraper(object):
 
         scope = Scope()
         scope['requests'] = session or requests.Session()
-        scope['context'] = context or {}
 
         job_queue.put((scraper_name, url, context))
 
@@ -45,7 +44,8 @@ class Scraper(object):
 
             scraper_name, url, context = job
             job_scope = scope.new_child()
-            job_scope['context'] = context
+            if context:
+                job_scope.update(context)
             try:
                 scraper = self.scrapers[scraper_name]
 
@@ -66,7 +66,7 @@ class Scraper(object):
                 log.debug('Queue size: %d' % job_queue.qsize())
                 log.info(url)
 
-                def parse_yield(scraper_name, rel_url=url, new_context={}):
+                def parse_yield(scraper_name, rel_url=url, new_context=None):
                     return scraper_name, urljoin(url, rel_url), new_context
 
                 if not inspect.isgeneratorfunction(scraper):
