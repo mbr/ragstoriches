@@ -51,22 +51,14 @@ class Scraper(object):
             try:
                 scraper = self.scrapers[scraper_name]
 
-                # retrieve url from default arguments
-                if not url:
-                    defargs = get_default_args(scraper)
-                    if not 'url' in defargs:
-                        raise TypeError('Scraper %r does not have a default '
-                                        'value for \'url\' and none was '
-                                        'supplied' % scraper)
-
-                    url = defargs['url']
-
-
                 log.debug("Calling scraper %s on %s'" % (
                     scraper.__name__, url
                 ))
                 log.debug('Queue size: %d' % job_queue.qsize())
                 log.info(url)
+
+                if url:
+                    job_scope['url'] = url
 
                 def parse_yield(scraper_name, rel_url=url, new_context={}):
                     scope = job_scope.new_child()
@@ -74,9 +66,9 @@ class Scraper(object):
                     return scraper_name, urljoin(url, rel_url), scope
 
                 if not inspect.isgeneratorfunction(scraper):
-                    job_scope.inject_and_call(scraper, url=url)
+                    job_scope.inject_and_call(scraper)
                 else:
-                    for new_job in job_scope.inject_and_call(scraper, url=url):
+                    for new_job in job_scope.inject_and_call(scraper):
                         job_queue.put(parse_yield(*new_job))
             except Exception as e:
                 log.error('Error handling job "%s" "%s": %s' %
