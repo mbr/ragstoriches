@@ -14,11 +14,15 @@ class Receiver(object):
         self.receivers[f.__name__] = f
         return f
 
-    def process(self, receiver_name, rargs, rkwargs):
+    def process(self, receiver_name, rargs, rkwargs, scope):
         log.debug('receiver %s processing record on %s' % (
             receiver_name, self.name))
 
         if not receiver_name in self.receivers:
-            return self.receivers['any'](receiver_name, *rargs, **rkwargs)
+            return scope.inject_and_call(
+                self.receivers['any'], receiver_name, *rargs, **rkwargs
+            )
 
-        return self.receivers[receiver_name](*rargs, **rkwargs)
+        return scope.inject_and_call(
+                self.receivers[receiver_name](*rargs, **rkwargs)
+            )

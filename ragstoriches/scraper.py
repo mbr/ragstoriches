@@ -27,18 +27,22 @@ class Scraper(object):
 
     def scrape(self, url=None, scraper_name='index',
                session=None, concurrency=None, receivers=[],
-               **kwargs):
+               initial_scope={}):
         pool = Pool(concurrency+2 if concurrency != None else None)
         job_queue = JoinableQueue()
         data_queue = JoinableQueue()
 
         scope = Scope()
-        scope['requests'] = session or requests.Session()
-        scope['data'] = lambda name, *args, **kwargs:\
-            data_queue.put((name, args, kwargs))
-        scope.update(kwargs)
+        scope.update(initial_scope)
 
-        job_queue.put((scraper_name, url, scope))
+        scraper_scope = scope.new_child()
+        scraper_scope['requests'] = session or requests.Session()
+        scraper_scope['data'] = lambda name, *args, **kwargs:\
+            data_queue.put((name, args, kwargs))
+
+        receiver_scope = scope.new_child()
+
+        job_queue.put((scraper_name, url, scraper_scope))
 
         def run_job(job):
             # runs a single job in the current greenlet
@@ -92,7 +96,7 @@ class Scraper(object):
                     break
 
                 for receiver in receivers:
-                    pool.spawn(receiver.process, *record)
+                    pool.spawn(receiver.process, record, receiver_scope)
 
                 data_queue.task_done()
 
