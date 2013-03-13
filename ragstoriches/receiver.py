@@ -25,5 +25,5 @@ class Receiver(object):
             )
 
         return scope.inject_and_call(
-                self.receivers[receiver_name](*rargs, **rkwargs)
+                self.receivers[receiver_name], *rargs, **rkwargs
             )
