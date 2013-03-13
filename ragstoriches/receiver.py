@@ -14,7 +14,8 @@ class Receiver(object):
         self.receivers[f.__name__] = f
         return f
 
-    def process(self, receiver_name, rargs, rkwargs, scope):
+    def process(self, record, scope):
+        receiver_name, rargs, rkwargs = record
         log.debug('receiver %s processing record on %s' % (
             receiver_name, self.name))
 
