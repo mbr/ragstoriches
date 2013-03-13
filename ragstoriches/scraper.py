@@ -19,6 +19,7 @@ log = logbook.Logger('ragstoriches')
 
 class Scraper(object):
     def __init__(self, name='Unnamed Scraper'):
+        self.name = name
         self.scrapers = {}
 
     def __call__(self, f):
@@ -33,6 +34,7 @@ class Scraper(object):
         data_queue = JoinableQueue()
 
         scope = Scope()
+        scope['log'] = logbook.Logger(self.name)
         scope.update(initial_scope)
 
         scraper_scope = scope.new_child()
@@ -47,7 +49,9 @@ class Scraper(object):
         def run_job(job):
             # runs a single job in the current greenlet
             if not len(job) == 3:
-                log.error('Malformed job (must be 3-tuple): %r' % (job,))
+                job_scope['log'].error(
+                    'Malformed job (must be 3-tuple): %r' % (job,)
+                )
                 job_queue.task_done()
                 return
 
@@ -55,11 +59,18 @@ class Scraper(object):
             try:
                 scraper = self.scrapers[scraper_name]
 
-                log.debug("Calling scraper %s on %s'" % (
+                job_scope['log'].debug("Calling scraper %s on %s'" % (
                     scraper.__name__, url
                 ))
-                log.debug('Queue size: %d' % job_queue.qsize())
-                log.info(url)
+                job_scope['log'].debug('Queue size: %d' % job_queue.qsize())
+
+                # setup new log
+                job_scope = job_scope.new_child()
+                job_scope['log'] = logbook.Logger('%s.%s' % (
+                   self.name, scraper_name
+                ))
+
+                job_scope['log'].info(url)
 
                 if url:
                     job_scope['url'] = url
@@ -75,9 +86,9 @@ class Scraper(object):
                     for new_job in job_scope.inject_and_call(scraper):
                         job_queue.put(parse_yield(*new_job))
             except Exception as e:
-                log.error('Error handling job "%s" "%s": %s' %
-                              (scraper_name, url, e))
-                log.debug(traceback.format_exc())
+                job_scope['log'].error('Error handling job "%s" "%s": %s' %
+                                       (scraper_name, url, e))
+                job_scope['log'].debug(traceback.format_exc())
             finally:
                 job_queue.task_done()
 
