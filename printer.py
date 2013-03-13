@@ -5,6 +5,7 @@ from ragstoriches.receiver import Receiver
 
 receiver = Receiver(__name__)
 
+
 @receiver
-def any(name, *args, **kwargs):
-    print '%s%r: %r' % (name, args, kwargs)
+def posting(**kwargs):
+    print 'New posting: %r' % kwargs
