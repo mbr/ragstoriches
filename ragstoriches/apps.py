@@ -65,6 +65,7 @@ def run_scraper():
 
     scraper = None
     receivers = []
+    scope = {}
     for mod in args.targets:
         for name, obj in mod.__dict__.iteritems():
             if isinstance(obj, Receiver):
@@ -74,6 +75,10 @@ def run_scraper():
                 if scraper != None:
                     raise Exception('Too many scrapers!')
                 scraper = obj
+
+            if getattr(obj, '_ragstoriches_export', None):
+                scope[obj._ragstoriches_export] = obj
+
 
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
