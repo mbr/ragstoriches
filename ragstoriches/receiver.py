@@ -15,15 +15,15 @@ class Receiver(object):
         return f
 
     def process(self, record, scope):
-        receiver_name, rargs, rkwargs = record
+        receiver_name, data = record
         log.debug('receiver %s processing record on %s' % (
             receiver_name, self.name))
+        call_scope = scope.new_child()
+        call_scope['result'] = data
 
         if not receiver_name in self.receivers:
-            return scope.inject_and_call(
-                self.receivers['any'], receiver_name, *rargs, **rkwargs
-            )
+            call_scope['data_type'] = receiver_name
 
-        return scope.inject_and_call(
-                self.receivers[receiver_name], *rargs, **rkwargs
-            )
+        return call_scope.inject_and_call(
+            self.receivers.get(receiver_name, 'any')
+        )

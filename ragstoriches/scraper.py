@@ -35,16 +35,11 @@ class Scraper(object):
 
         scope = Scope()
         scope['log'] = logbook.Logger(self.name)
+        scope['data'] = lambda name, **kwargs: data_queue.put((name, kwargs))
+        scope['requests'] = session or requests.Session()
         scope.update(initial_scope)
 
-        scraper_scope = scope.new_child()
-        scraper_scope['requests'] = session or requests.Session()
-        scraper_scope['data'] = lambda name, *args, **kwargs:\
-            data_queue.put((name, args, kwargs))
-
-        receiver_scope = scope.new_child()
-
-        job_queue.put((scraper_name, url, scraper_scope))
+        job_queue.put((scraper_name, url, scope))
 
         def run_job(job):
             # runs a single job in the current greenlet
@@ -107,7 +102,7 @@ class Scraper(object):
                     break
 
                 for receiver in receivers:
-                    pool.spawn(receiver.process, record, receiver_scope)
+                    pool.spawn(receiver.process, record, scope)
 
                 data_queue.task_done()
 

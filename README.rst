@@ -131,11 +131,11 @@ Two differences: We inject ``data`` as an argument and instead of printing our
 data, we pass it to the new callable.
 
 When you call ``data``, the first argument is the name of a subreceiver and
-everything passed into it gets passed on to every receiver loaded. We don't
-load any receivers, so running the scraper will do nothing but fill up the
-data-queue.
+everything passed into it gets passed on to every receiver loaded in a
+dictionary called ``result``. We didn't load any receivers, so running the
+scraper will do nothing but fill up the data-queue.
 
-To illustrate, put the following into a file called ``printer.py``:
+To rectify this situation, put the following into a file called ``printer.py``:
 
 .. code-block:: python
 
@@ -145,8 +145,8 @@ To illustrate, put the following into a file called ``printer.py``:
 
 
    @receiver
-   def posting(**kwargs):
-       print 'New posting: %r' % kwargs
+   def posting(result):
+       print 'New posting: %r' % result
 
 Afterwards, run ``ragstoriches -q craigs.py printer.py``. The result will be
 that the receiver prints the extracted data to stdout, nicely decoupling
