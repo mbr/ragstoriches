@@ -120,20 +120,24 @@ replacing the second function with this:
    def posting(requests, url, data):
        html = document_fromstring(requests.get(url).content)
 
-       data('posting',
-           title=html.cssselect('.postingtitle')[0].text.strip(),
-           id=re.findall(r'\d+', html.cssselect('div.postinginfos p')[0].text)[0],
-           date=html.cssselect('.postinginfos date')[0].text.strip(),
-           body=html.cssselect('#postingbody')[0].text_content().strip(),
-       )
+   @scraper
+   def posting(requests, url, push_data):
+       html = document_fromstring(requests.get(url).content)
+
+       push_data('posting', {
+           'title': html.cssselect('.postingtitle')[0].text.strip(),
+           'id': re.findall(r'\d+', html.cssselect('div.postinginfos p')[0].text)[0],
+           'date': html.cssselect('.postinginfos date')[0].text.strip(),
+           'body': html.cssselect('#postingbody')[0].text_content().strip(),
+       })
 
 Two differences: We inject ``data`` as an argument and instead of printing our
 data, we pass it to the new callable.
 
-When you call ``data``, the first argument is the name of a subreceiver and
-everything passed into it gets passed on to every receiver loaded in a
-dictionary called ``result``. We didn't load any receivers, so running the
-scraper will do nothing but fill up the data-queue.
+When you call ``push_data``, the first argument is the name of a subreceiver and
+everything passed into it gets passed on to every receiver as ``data``.
+We didn't load any receivers, so running the scraper will do nothing but fill
+up the data-queue.
 
 To rectify this situation, put the following into a file called ``printer.py``:
 
@@ -145,8 +149,8 @@ To rectify this situation, put the following into a file called ``printer.py``:
 
 
    @receiver
-   def posting(result):
-       print 'New posting: %r' % result
+   def posting(data):
+       print 'New posting: %r' % data
 
 Afterwards, run ``ragstoriches -q craigs.py printer.py``. The result will be
 that the receiver prints the extracted data to stdout, nicely decoupling

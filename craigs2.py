@@ -21,12 +21,12 @@ def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
 
 
 @scraper
-def posting(requests, url, data):
+def posting(requests, url, push_data):
     html = document_fromstring(requests.get(url).content)
 
-    data('posting',
-        title=html.cssselect('.postingtitle')[0].text.strip(),
-        id=re.findall(r'\d+', html.cssselect('div.postinginfos p')[0].text)[0],
-        date=html.cssselect('.postinginfos date')[0].text.strip(),
-        body=html.cssselect('#postingbody')[0].text_content().strip(),
-    )
+    push_data('posting', {
+        'title': html.cssselect('.postingtitle')[0].text.strip(),
+        'id': re.findall(r'\d+', html.cssselect('div.postinginfos p')[0].text)[0],
+        'date': html.cssselect('.postinginfos date')[0].text.strip(),
+        'body': html.cssselect('#postingbody')[0].text_content().strip(),
+    })

@@ -35,7 +35,8 @@ class Scraper(object):
 
         scope = Scope()
         scope['log'] = logbook.Logger(self.name)
-        scope['data'] = lambda name, **kwargs: data_queue.put((name, kwargs))
+        scope['push_data'] = lambda name, data:\
+            data_queue.put((name, data))
         scope['requests'] = session or requests.Session()
         scope.update(initial_scope)
 

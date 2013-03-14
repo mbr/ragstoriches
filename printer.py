@@ -7,5 +7,5 @@ receiver = Receiver(__name__)
 
 
 @receiver
-def posting(result):
-    print 'New posting: %r' % result
+def posting(data):
+    print 'New posting: %r' % data

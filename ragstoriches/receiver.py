@@ -19,7 +19,7 @@ class Receiver(object):
         log.debug('receiver %s processing record on %s' % (
             receiver_name, self.name))
         call_scope = scope.new_child()
-        call_scope['result'] = data
+        call_scope['data'] = data
 
         if not receiver_name in self.receivers:
             call_scope['data_type'] = receiver_name
