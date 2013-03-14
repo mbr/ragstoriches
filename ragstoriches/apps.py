@@ -7,6 +7,7 @@ import importlib
 import os
 import sys
 
+from coloringbook import ColoringHandler
 import logbook
 import requests_cache
 
@@ -52,7 +53,7 @@ def run_scraper():
     args = parser.parse_args()
 
     logbook.handlers.NullHandler().push_application()
-    logbook.handlers.StderrHandler(level=args.loglevel).push_application()
+    ColoringHandler(level=args.loglevel).push_application()
 
     # setup stdout
     if args.encoding and not sys.stdout.isatty():
