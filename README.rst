@@ -26,7 +26,6 @@ A simple example to tell the story:
        if nextpage:
            yield 'index', nextpage[0].get('href')
 
-
    @scraper
    def posting(requests, url):
        html = document_fromstring(requests.get(url).content)
@@ -146,7 +145,6 @@ To rectify this situation, put the following into a file called ``printer.py``:
    from ragstoriches.receiver import Receiver
 
    receiver = Receiver(__name__)
-
 
    @receiver
    def posting(data):
