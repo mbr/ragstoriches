@@ -12,7 +12,7 @@ class ColoringFormatter(logbook.StringFormatter):
         logbook.CRITICAL: Fore.RED + Style.BRIGHT,
         logbook.ERROR: Fore.RED,
         logbook.WARNING: Fore.YELLOW,
-        logbook.INFO: Fore.GREEN + Style.DIM,
+        logbook.INFO: Fore.BLUE,
         logbook.DEBUG: Style.DIM,
         logbook.NOTSET: Fore.GREEN,
     }
