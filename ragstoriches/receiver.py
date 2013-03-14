@@ -23,7 +23,8 @@ class Receiver(object):
 
         if not receiver_name in self.receivers:
             call_scope['data_type'] = receiver_name
+            receiver_name = 'any'
 
         return call_scope.inject_and_call(
-            self.receivers.get(receiver_name, 'any')
+            self.receivers[receiver_name]
         )
