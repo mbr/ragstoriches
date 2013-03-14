@@ -23,7 +23,7 @@ class ColoringFormatter(logbook.StringFormatter):
         return self.color_table[record.level] + out\
                + Fore.RESET + Style.RESET_ALL
 
-class ColoringLog(logbook.StderrHandler):
+class ColoringHandler(logbook.StderrHandler):
     formatter_class = ColoringFormatter
     default_format_string = (
             u'[{record.local_time:%H:%M:%S}] '
@@ -40,7 +40,7 @@ class ColoringLog(logbook.StderrHandler):
                 self.write('[{record.local_time:%Y-%M-%D}]\n'.format(record=record))
             finally:
                 self.lock.release()
-        super(ColoringLog, self).emit(record)
+        super(ColoringHandler, self).emit(record)
 
         self._prev_date = record.local_time.date()
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     # small example
     log = logbook.Logger('sample.log')
 
-    hdl = ColoringLog()
+    hdl = ColoringHandler()
 
     hdl.push_application()
 
