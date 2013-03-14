@@ -20,7 +20,7 @@ setup(
     url='http://github.com/mbr/ragstoriches',
     license='MIT',
     install_requires=['gevent', 'logbook', 'requests', 'requests_cache',
-                      'stuf'],
+                      'stuf', 'colorama', 'python-dateutil'],
     packages=find_packages(exclude=['test']),
     entry_points={
         'console_scripts': [
