@@ -77,9 +77,8 @@ def run_scraper():
                     raise Exception('Too many scrapers!')
                 scraper = obj
 
-            if getattr(obj, '_ragstoriches_export', None):
-                scope[obj._ragstoriches_export] = obj
-
+        for name, obj in getattr(mod, '_rr_export', {}).iteritems():
+               scope[name] = name
 
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
