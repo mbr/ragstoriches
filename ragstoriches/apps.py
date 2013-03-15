@@ -78,7 +78,7 @@ def run_scraper():
                 scraper = obj
 
         for name, obj in getattr(mod, '_rr_export', {}).iteritems():
-               scope[name] = name
+               scope[name] = obj
 
     scraper.scrape(url=args.url,
                    scraper_name=args.scraper,
