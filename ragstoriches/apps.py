@@ -81,6 +81,7 @@ def run_scraper():
                scope[name] = obj
 
     scraper.scrape(url=args.url,
+                   initial_scope=scope,
                    scraper_name=args.scraper,
                    concurrency=args.requests,
                    session=session,
