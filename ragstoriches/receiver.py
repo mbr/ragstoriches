@@ -20,9 +20,9 @@ class Receiver(object):
             receiver_name, self.name))
         call_scope = scope.new_child()
         call_scope['data'] = data
+        call_scope['data_type'] = receiver_name
 
         if not receiver_name in self.receivers:
-            call_scope['data_type'] = receiver_name
             receiver_name = 'any'
 
         return call_scope.inject_and_call(
