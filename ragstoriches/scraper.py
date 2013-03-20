@@ -120,4 +120,12 @@ class Scraper(object):
         # tell spawner to exit
         job_queue.put(None)
         data_queue.put(None)
+
         pool.join()
+
+        # now perform all post-processing
+        for receiver in receivers:
+            if receiver._post_process:
+                post_scope = scope.new_child()
+                post_scope['log'] = logbook.Logger('%s-post_process')
+                post_scope.inject_and_call(receiver._post_process)

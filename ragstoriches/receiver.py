@@ -6,6 +6,8 @@ import logbook
 log = logbook.Logger('ragstoriches.receiver')
 
 class Receiver(object):
+    _post_process = None
+
     def __init__(self, name='Unnamed Receiver'):
         self.name = name
         self.receivers = {}
@@ -28,3 +30,6 @@ class Receiver(object):
         return call_scope.inject_and_call(
             self.receivers[receiver_name]
         )
+
+    def post_process(self, f):
+        self._post_process = f
