@@ -5,6 +5,7 @@ import functools
 import inspect
 import traceback
 from urlparse import urljoin
+import sys
 
 
 from gevent.pool import Pool
@@ -28,7 +29,7 @@ class Scraper(object):
 
     def scrape(self, url=None, scraper_name='index',
                session=None, concurrency=None, receivers=[],
-               initial_scope={}):
+               initial_scope={}, exception_handler=None):
         pool = Pool(concurrency+2 if concurrency != None else None)
         job_queue = JoinableQueue()
         data_queue = JoinableQueue()
@@ -85,6 +86,8 @@ class Scraper(object):
                 job_scope['log'].error('Error handling job "%s" "%s": %s' %
                                        (scraper_name, url, e))
                 job_scope['log'].debug(traceback.format_exc())
+                if exception_handler:
+                    exception_handler(sys.exc_info())
             finally:
                 job_queue.task_done()
 

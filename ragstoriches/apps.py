@@ -25,6 +25,11 @@ def run_scraper():
     import gevent.monkey
     gevent.monkey.patch_all()
 
+    def pdb_handler(exc_info):
+        import pdb
+        import traceback
+        pdb.post_mortem(exc_info[2])
+
     """Runs a specified scraper module."""
     parser = argparse.ArgumentParser()
     parser.add_argument('targets', type=module_type, nargs='+',
@@ -49,6 +54,9 @@ def run_scraper():
     parser.add_argument('-q', '--quiet', action='store_const',
                         const=logbook.WARNING, dest='loglevel',
                         help='Only output errors.')
+    parser.add_argument('--pdb', action='store_const', const=pdb_handler,
+                        dest='exception_handler',
+                        help='Run pdb on exceptions.')
     parser.set_defaults(loglevel=logbook.INFO)
     args = parser.parse_args()
 
@@ -85,4 +93,5 @@ def run_scraper():
                    scraper_name=args.scraper,
                    concurrency=args.requests,
                    session=session,
-                   receivers=receivers)
+                   receivers=receivers,
+                   exception_handler=args.exception_handler)
