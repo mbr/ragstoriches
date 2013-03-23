@@ -23,7 +23,7 @@ def module_type(path):
 
 def run_scraper():
     import gevent.monkey
-    gevent.monkey.patch_all()
+    gevent.monkey.patch_all(thread=False)
 
     def pdb_handler(exc_info):
         import pdb
