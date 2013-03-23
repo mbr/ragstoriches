@@ -18,6 +18,71 @@ from injection import Scope, get_default_args
 log = logbook.Logger('ragstoriches')
 
 
+class Job(object):
+    def __init__(self, parent, scraper_name, url=None, parent_scope=None,
+                 attempt=0):
+        self.scraper = parent.scrapers[scraper_name]
+        self.scope = parent_scope.new_child() if parent_scope else Scope()
+        self.attempt = attempt
+        self.parent = parent
+
+        # get default url
+        def_args = get_default_args(self.scraper)
+        if 'url' in def_args:
+            self.scope['url'] = def_args['url']
+
+        # passed-in url
+        if url != None:
+            self.scope['url'] = url
+
+        # set up log
+        self.scope['log'] = logbook.Logger('%s.%s' % (
+            self.parent.name, scraper_name
+        ))
+
+
+    @property
+    def log(self):
+        return self.scope['log']
+
+    @property
+    def url(self):
+        return self.scope['url']
+
+    def from_yield(self, yield_val):
+        scope = self.scope.new_child()
+
+        if len(yield_val) == 3:
+            scraper_name, rel_url, new_context = yield_val
+            scope.update(new_context)
+        elif len(yield_val) == 2:
+            scraper_name, rel_url = yield_val
+
+        return self.__class__(
+            self.parent,
+            scraper_name,
+            urljoin(self.url, rel_url),
+            scope
+        )
+
+    def retry(self):
+        self.attempt += 1
+        return self
+
+    def run(self):
+        self.log.info(self.url)
+        if not inspect.isgeneratorfunction(self.scraper):
+            self.scope.inject_and_call(self.scraper)
+            return
+            yield
+        else:
+            for val in self.scope.inject_and_call(self.scraper):
+                yield val
+
+    def __str__(self):
+        return 'Job(%d)<%s:%s>' % (self.attempt, self.scraper_name, self.url)
+
+
 class Scraper(object):
     def __init__(self, name='Unnamed Scraper'):
         self.name = name
@@ -41,58 +106,25 @@ class Scraper(object):
         scope['requests'] = session or requests.Session()
         scope.update(initial_scope)
 
-        job_queue.put((scraper_name, url, scope))
+        job_queue.put(Job(self, scraper_name, url, scope))
 
         aborted = False
 
         def run_job(job):
             # runs a single job in the current greenlet
-            if not len(job) == 3:
-                job_scope['log'].error(
-                    'Malformed job (must be 3-tuple): %r' % (job,)
-                )
-                job_queue.task_done()
-                return
-
-            scraper_name, url, job_scope = job
             try:
-                scraper = self.scrapers[scraper_name]
-
-                job_scope['log'].debug("Calling scraper %s on %s'" % (
-                    scraper.__name__, url
-                ))
-                job_scope['log'].debug('Queue size: %d' % job_queue.qsize())
-
                 # setup new log
-                job_scope = job_scope.new_child()
-                job_scope['log'] = logbook.Logger('%s.%s' % (
-                   self.name, scraper_name
-                ))
-
-                job_scope['log'].info(url)
-
-                if url:
-                    job_scope['url'] = url
-
-                def parse_yield(scraper_name, rel_url=url, new_context={}):
-                    scope = job_scope.new_child()
-                    scope.update(new_context)
-                    return scraper_name, urljoin(url, rel_url), scope
-
-                if not inspect.isgeneratorfunction(scraper):
-                    job_scope.inject_and_call(scraper)
-                else:
-                    for new_job in job_scope.inject_and_call(scraper):
-                        job_queue.put(parse_yield(*new_job))
+                for val in job.run():
+                    job_queue.put(job.from_yield(val))
             except CriticalError as e:
-                job_scope['log'].critical(e)
-                job_scope['log'].debug(traceback.format_exc())
-                job_scope['log'].debug('Aborting scrape...')
+                job.log.critical(e)
+                job.log.debug(traceback.format_exc())
+                job.log.debug('Aborting scrape...')
                 aborted = True
             except Exception as e:
-                job_scope['log'].error('Error handling job "%s" "%s": %s' %
+                job.log.error('Error handling job "%s" "%s": %s' %
                                        (scraper_name, url, e))
-                job_scope['log'].debug(traceback.format_exc())
+                job.log.debug(traceback.format_exc())
                 if exception_handler:
                     exception_handler(sys.exc_info())
             finally:
