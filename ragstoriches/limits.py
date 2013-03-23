@@ -7,46 +7,6 @@ from time import time
 
 
 class TicketGenerator(object):
-    def __init__(self, interval=1.0, max=0, initial=None):
-        if initial == None:
-            initial = max
-
-        if not max:
-            self.tickets = Semaphore(initial)
-        else:
-            self.tickets = BoundedSemaphore(max)
-
-        for i in xrange(max-initial):
-            self.tickets.acquire()  # reduce to correct value
-
-        self.interval = float(interval)
-
-    def get(self, n=1):
-        for i in xrange(n):
-            self.tickets.acquire()
-
-    def run(self):
-        prev = time()
-        credits = 0
-
-        while True:
-            sleep(self.interval)
-            cur = time()
-
-            credits += (cur - prev)/self.interval
-
-            try:
-                while credits >= 1:
-                    credits -= 1
-                    self.tickets.release()
-            except ValueError:
-                # semaphore is 'full'
-                credits = 0
-            finally:
-                prev = cur
-
-
-class TicketGenerator2(object):
     def __init__(self, tps=1.0, max=None, initial=None):
         self.last_update = time()
         self._lock = RLock()
