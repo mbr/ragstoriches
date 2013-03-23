@@ -7,7 +7,6 @@ import traceback
 from urlparse import urljoin
 import sys
 
-
 from gevent.pool import Pool
 from gevent.queue import JoinableQueue
 import logbook
