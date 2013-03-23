@@ -13,6 +13,7 @@ from gevent.queue import JoinableQueue
 import logbook
 import requests
 
+from errors import *
 from injection import Scope, get_default_args
 
 log = logbook.Logger('ragstoriches')
