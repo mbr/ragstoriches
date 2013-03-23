@@ -34,7 +34,8 @@ class ColoringHandler(logbook.StderrHandler):
     def emit(self, record):
         utc_time = record.time.replace(tzinfo=dateutil.tz.tzutc())
         record.local_time = utc_time.astimezone(dateutil.tz.tzlocal())
-        if not self._prev_date or record.local_time.date() != self._prev_date:
+        if self._prev_date != None and \
+           record.local_time.date() != self._prev_date:
             self.lock.acquire()
             try:
                 self.write('[{record.local_time:%Y-%M-%D}]\n'.format(record=record))
