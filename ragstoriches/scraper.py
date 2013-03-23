@@ -44,6 +44,8 @@ class Scraper(object):
 
         job_queue.put((scraper_name, url, scope))
 
+        aborted = False
+
         def run_job(job):
             # runs a single job in the current greenlet
             if not len(job) == 3:
@@ -83,6 +85,11 @@ class Scraper(object):
                 else:
                     for new_job in job_scope.inject_and_call(scraper):
                         job_queue.put(parse_yield(*new_job))
+            except CriticalError as e:
+                job_scope['log'].critical(e)
+                job_scope['log'].debug(traceback.format_exc())
+                job_scope['log'].debug('Aborting scrape...')
+                aborted = True
             except Exception as e:
                 job_scope['log'].error('Error handling job "%s" "%s": %s' %
                                        (scraper_name, url, e))
@@ -94,14 +101,14 @@ class Scraper(object):
 
         def job_spawner():
             # using the pool, spawns a new job for every job in the queue
-            while True:
+            while not aborted:
                 job = job_queue.get()
                 if None == job:
                     break
                 pool.spawn(run_job, job)
 
         def receiver_spawner():
-            while True:
+            while not aborted:
                 record = data_queue.get()
                 if None == record:
                     break
