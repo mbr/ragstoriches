@@ -46,9 +46,6 @@ def run_scraper():
                         help='When stdout is redirected, change output '\
                              'encoding to this (default: utf-8). Set to '\
                              'empty string to disable.')
-    parser.add_argument('-r', '--requests', default=10, type=int,
-                        help='Maximum number of requests active at the same '\
-                             'time.')
     parser.add_argument('-s', '--scraper', default='index',
                         help='Name of the scraper entry point.')
     parser.add_argument('-q', '--quiet', action='store_const',
@@ -57,6 +54,12 @@ def run_scraper():
     parser.add_argument('--pdb', action='store_const', const=pdb_handler,
                         dest='exception_handler',
                         help='Run pdb on exceptions.')
+    parser.add_argument('-b', '--burst-limit', default=15, type=float,
+                        help='Highest burst rate for connections (allow '
+                             'exceeding the average for a short timespan.')
+    parser.add_argument('-r', '--rate-limit', default=5, type=float,
+                        help='Maximum number of requests per second '
+                             'to make on average. Defaults to 10.'),
     parser.set_defaults(loglevel=logbook.INFO)
     args = parser.parse_args()
 
@@ -91,7 +94,8 @@ def run_scraper():
     scraper.scrape(url=args.url,
                    initial_scope=scope,
                    scraper_name=args.scraper,
-                   concurrency=args.requests,
+                   burst_limit=args.burst_limit,
+                   rate_limit=args.rate_limit,
                    session=session,
                    receivers=receivers,
                    exception_handler=args.exception_handler)

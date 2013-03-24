@@ -9,13 +9,18 @@ import sys
 
 from gevent.pool import Pool
 from gevent.queue import JoinableQueue
+from gevent.local import local
 import logbook
 import requests
+from requests.adapters import HTTPAdapter
 
 from errors import *
 from injection import Scope, get_default_args
+from limits import TicketGenerator
 
 log = logbook.Logger('ragstoriches')
+
+glocal = local()
 
 
 class Job(object):
@@ -70,7 +75,7 @@ class Job(object):
         return self
 
     def run(self):
-        self.log.info(self.url)
+        glocal.log = self.scope['log']
         if not inspect.isgeneratorfunction(self.scraper):
             self.scope.inject_and_call(self.scraper)
             return
@@ -83,6 +88,19 @@ class Job(object):
         return 'Job(%d)<%s:%s>' % (self.attempt, self.scraper_name, self.url)
 
 
+class TicketBoundHTTPAdapter(HTTPAdapter):
+    def __init__(self, ticket_gen, *args, **kwargs):
+        super(TicketBoundHTTPAdapter, self).__init__(*args, **kwargs)
+        self.ticket_gen = ticket_gen
+
+    def send(self, *args, **kwargs):
+        # obtain a ticket
+        self.ticket_gen.get()
+
+        # then send
+        return super(TicketBoundHTTPAdapter, self).send(*args, **kwargs)
+
+
 class Scraper(object):
     def __init__(self, name='Unnamed Scraper'):
         self.name = name
@@ -93,9 +111,9 @@ class Scraper(object):
         return f
 
     def scrape(self, url=None, scraper_name='index',
-               session=None, concurrency=None, receivers=[],
+               session=None, burst_limit=None, rate_limit=None, receivers=[],
                initial_scope={}, exception_handler=None):
-        pool = Pool(concurrency+2 if concurrency != None else None)
+        pool = Pool(10000)  # almost no limit, limit connections instead
         job_queue = JoinableQueue()
         data_queue = JoinableQueue()
 
@@ -103,7 +121,14 @@ class Scraper(object):
         scope['log'] = logbook.Logger(self.name)
         scope['push_data'] = lambda name, data:\
             data_queue.put((name, data))
-        scope['requests'] = session or requests.Session()
+
+        rs = session or requests.Session()
+        rs.hooks['response'] = lambda r: glocal.log.info(r.url)
+        cticket_gen = TicketGenerator(rate_limit, burst_limit)
+        adapter = TicketBoundHTTPAdapter(cticket_gen)
+        rs.mount('http://', adapter)
+        rs.mount('https://', adapter)
+        scope['requests'] = rs
         scope.update(initial_scope)
 
         job_queue.put(Job(self, scraper_name, url, scope))
