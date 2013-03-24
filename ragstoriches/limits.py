@@ -34,8 +34,6 @@ class TicketGenerator(object):
 
             if self._tickets < n:
                 delay = self.last_update + (n/float(self.tps)) - time()
-                print "need to wait", delay, "to go from", self._tickets, "to",\
-                n
 
                 # needs more tickets
                 if delay:
