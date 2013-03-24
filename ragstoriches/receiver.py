@@ -33,3 +33,4 @@ class Receiver(object):
 
     def post_process(self, f):
         self._post_process = f
+        return f
