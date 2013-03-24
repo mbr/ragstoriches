@@ -27,6 +27,7 @@ class Job(object):
     def __init__(self, parent, scraper_name, url=None, parent_scope=None,
                  attempt=0):
         self.scraper = parent.scrapers[scraper_name]
+        self.scraper_name = scraper_name
         self.scope = parent_scope.new_child() if parent_scope else Scope()
         self.attempt = attempt
         self.parent = parent
