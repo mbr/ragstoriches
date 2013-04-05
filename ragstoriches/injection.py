@@ -13,7 +13,10 @@ class Scope(ChainMap):
         # adds all arguments that have not been passed via *args or **kwargs
         # as a keyword argument from Scope
         for arg_name in func_args.args[len(args):]:
-            if not arg_name in call_kwargs and arg_name in self:
+            if not arg_name in call_kwargs:
+                if not arg_name in self:
+                    raise TypeError('Missing argument %s, neither in scope '
+                                    'nor defaults.')
                 call_kwargs[arg_name] = self[arg_name]
 
         return func(*args, **call_kwargs)
