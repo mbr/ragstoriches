@@ -34,7 +34,8 @@ def run_scraper():
     parser = argparse.ArgumentParser()
     parser.add_argument('targets', type=module_type, nargs='+',
                         help='Targets to run.')
-    parser.add_argument('url', help='The url to start scraping at', nargs='?')
+    parser.add_argument('-u', '--urls', nargs='*',
+                        help='The url to start scraping at')
     parser.add_argument('-c', '--cache',
                         help='Use a cache with this name to avoid '
                              'redownloading pages.')
@@ -91,11 +92,12 @@ def run_scraper():
         for name, obj in getattr(mod, '_rr_export', {}).iteritems():
                scope[name] = obj
 
-    scraper.scrape(url=args.url,
-                   initial_scope=scope,
-                   scraper_name=args.scraper,
-                   burst_limit=args.burst_limit,
-                   rate_limit=args.rate_limit,
-                   session=session,
-                   receivers=receivers,
-                   exception_handler=args.exception_handler)
+    for url in args.urls:
+        scraper.scrape(url=url,
+                       initial_scope=scope,
+                       scraper_name=args.scraper,
+                       burst_limit=args.burst_limit,
+                       rate_limit=args.rate_limit,
+                       session=session,
+                       receivers=receivers,
+                       exception_handler=args.exception_handler)
