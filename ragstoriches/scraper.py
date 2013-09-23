@@ -3,11 +3,13 @@
 
 import functools
 import inspect
+import time
 import traceback
 from urlparse import urljoin
 import sys
 
 from gevent.pool import Pool
+from gevent.coros import RLock
 from gevent.queue import JoinableQueue
 from gevent.local import local
 import logbook
@@ -22,10 +24,67 @@ log = logbook.Logger('ragstoriches')
 
 glocal = local()
 
+class JobQueue(object):
+    def __init__(self):
+        self._qlock = Condition(RLock())
+        self._all_done = Condition(RLock())
+        self._jobs = []
+        self._count = 0
+
+    def get(self):
+        with self._qlock:
+            while True:
+                if not self._jobs:
+                    # queue is empty, wait until there is a job
+                    self._jobs.wait()
+
+                # now there's at least one job
+                job = self._jobs[0]
+
+                if not job.execution_time:
+                    return heapq.heappop(self._jobs)
+
+                cur_time = time.time()
+                if job.execution_time <= cur_time:
+                    return heapq.heappop(self._jobs)
+
+                # there is a job, but we can't execute it right away
+                # wait until there's a new job or enough time has passed
+                self._qlock.wait(job.execution_time - cur_time)
+
+    def join(self):
+        with self._all_done:
+            self._all_done().wait()
+
+    def put(self, job):
+        with self._qlock:
+            heapq.heappush(self._jobs, job)
+
+            # increase job count
+            self._count += 1
+
+            # new data
+            self._qlock.notify()
+
+    def task_done(self):
+        with self._qlock:
+            self._count -= 1
+
+            if self._count == 0:
+                with self._all_done:
+                    self._all_done().notifyAll()
+
+
+class NullJob(object):
+    execution_time = 0
+
+    def __lt__(self, them):
+        return True
+
 
 class Job(object):
     def __init__(self, parent, scraper_name, url=None, parent_scope=None,
-                 attempt=0):
+                 attempt=0, execution_time=None, priority=None):
         self.scraper = parent.scrapers[scraper_name]
         self.scraper_name = scraper_name
         self.scope = parent_scope.new_child() if parent_scope else Scope()
@@ -46,6 +105,13 @@ class Job(object):
             self.parent.name, scraper_name
         ))
 
+    def __lt__(self, them):
+        if isinstance(them, NullJob):
+            return False
+
+        if (self.execution_time or 0) == (them.execution_time or 0):
+            return (self.priority or 0) > (them.priority or 0)
+        return (self.execution_time or 0) < (them.execution_time or 0)
 
     @property
     def log(self):
@@ -142,6 +208,19 @@ class Scraper(object):
                 # setup new log
                 for val in job.run():
                     job_queue.put(job.from_yield(val))
+            except CapacityError as e:
+                job.log.warning('CapacityError: %s, backing off')
+                job.log.debug(traceback.format_exc())
+                # FIXME: throttle
+            except TemporaryError as e:
+                job.log.warning('Temporary failure on %s, '
+                                         'rescheduling')
+                job.log.debug(traceback.format_exc())
+                job_queue.put(job.retry())
+                # FIXME: add limit for retries
+            except PermanentError as e:
+                job.log.error(e)
+                job.log.debug(traceback.format_exc())
             except CriticalError as e:
                 job.log.critical(e)
                 job.log.debug(traceback.format_exc())

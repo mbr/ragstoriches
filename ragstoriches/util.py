@@ -15,10 +15,10 @@ class Download(object):
     def save_to(self, outfn):
         with open(outfn, 'wb') as out:
             saved = 0
-            total = int(r.headers.get('content-length', '0'))
+            total = int(self.response.headers.get('content-length', '0'))
 
             self.on_progress(saved, total)
-            for chunk in r.iter_content(self.BUFFER_SIZE):
+            for chunk in self.response.iter_content(self.BUFFER_SIZE):
                 out.write(chunk)
                 saved += len(chunk)
                 self.on_progress(saved, total)
