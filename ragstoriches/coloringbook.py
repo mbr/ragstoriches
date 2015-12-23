@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-
 from colorama import Fore, Style
 import dateutil.tz
 import logbook
+
 
 class ColoringFormatter(logbook.StringFormatter):
     color_table = {
@@ -20,25 +19,25 @@ class ColoringFormatter(logbook.StringFormatter):
     def format_record(self, record, handler):
         out = super(ColoringFormatter, self).format_record(record, handler)
 
-        return self.color_table[record.level] + out\
-               + Fore.RESET + Style.RESET_ALL
+        return (self.color_table[record.level] + out + Fore.RESET +
+                Style.RESET_ALL)
+
 
 class ColoringHandler(logbook.StderrHandler):
     formatter_class = ColoringFormatter
-    default_format_string = (
-            u'[{record.local_time:%H:%M:%S}] '
-        u'{record.channel}: {record.message}'
-    )
+    default_format_string = (u'[{record.local_time:%H:%M:%S}] '
+                             u'{record.channel}: {record.message}')
     _prev_date = None
 
     def emit(self, record):
         utc_time = record.time.replace(tzinfo=dateutil.tz.tzutc())
         record.local_time = utc_time.astimezone(dateutil.tz.tzlocal())
-        if self._prev_date != None and \
-           record.local_time.date() != self._prev_date:
+        if (self._prev_date is not None and
+                record.local_time.date() != self._prev_date):
             self.lock.acquire()
             try:
-                self.write('[{record.local_time:%Y-%M-%D}]\n'.format(record=record))
+                self.write('[{record.local_time:%Y-%M-%D}]\n'.format(record=
+                                                                     record))
             finally:
                 self.lock.release()
         super(ColoringHandler, self).emit(record)

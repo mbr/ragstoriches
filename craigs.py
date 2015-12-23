@@ -8,6 +8,7 @@ from ragstoriches.scraper import Scraper
 
 scraper = Scraper(__name__)
 
+
 @scraper
 def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
     html = document_fromstring(requests.get(url).content)

@@ -33,7 +33,7 @@ class TicketGenerator(object):
             self._update_tickets()
 
             if self._tickets < n:
-                delay = self.last_update + (n/float(self.tps)) - time()
+                delay = self.last_update + (n / float(self.tps)) - time()
 
                 # needs more tickets
                 if delay:

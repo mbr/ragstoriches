@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
 class Download(object):
-    BUFFER_SIZE=16*1024
+    BUFFER_SIZE = 16 * 1024
+
     def __init__(self, response):
         self.response = response
-        self.on_progress = lambda s,t: None
+        self.on_progress = lambda s, t: None
 
     def read(self, len=0):
         buf = StringIO()

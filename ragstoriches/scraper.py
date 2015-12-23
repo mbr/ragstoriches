@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import functools
 import inspect
 import time
 import traceback
@@ -23,6 +22,7 @@ from limits import TicketGenerator
 log = logbook.Logger('ragstoriches')
 
 glocal = local()
+
 
 class JobQueue(object):
     def __init__(self):
@@ -83,8 +83,14 @@ class NullJob(object):
 
 
 class Job(object):
-    def __init__(self, parent, scraper_name, url=None, parent_scope=None,
-                 attempt=0, execution_time=None, priority=None):
+    def __init__(self,
+                 parent,
+                 scraper_name,
+                 url=None,
+                 parent_scope=None,
+                 attempt=0,
+                 execution_time=None,
+                 priority=None):
         self.scraper = parent.scrapers[scraper_name]
         self.scraper_name = scraper_name
         self.scope = parent_scope.new_child() if parent_scope else Scope()
@@ -97,13 +103,12 @@ class Job(object):
             self.scope['url'] = def_args['url']
 
         # passed-in url
-        if url != None:
+        if url is not None:
             self.scope['url'] = url
 
         # set up log
-        self.scope['log'] = logbook.Logger('%s.%s' % (
-            self.parent.name, scraper_name
-        ))
+        self.scope['log'] = logbook.Logger('%s.%s' % (self.parent.name,
+                                                      scraper_name))
 
     def __lt__(self, them):
         if isinstance(them, NullJob):
@@ -130,12 +135,8 @@ class Job(object):
         elif len(yield_val) == 2:
             scraper_name, rel_url = yield_val
 
-        return self.__class__(
-            self.parent,
-            scraper_name,
-            urljoin(self.url, rel_url),
-            scope
-        )
+        return self.__class__(self.parent, scraper_name,
+                              urljoin(self.url, rel_url), scope)
 
     def retry(self):
         self.attempt += 1
@@ -177,9 +178,15 @@ class Scraper(object):
         self.scrapers[f.__name__] = f
         return f
 
-    def scrape(self, url=None, scraper_name='index',
-               session=None, burst_limit=None, rate_limit=None, receivers=[],
-               initial_scope={}, exception_handler=None):
+    def scrape(self,
+               url=None,
+               scraper_name='index',
+               session=None,
+               burst_limit=None,
+               rate_limit=None,
+               receivers=[],
+               initial_scope={},
+               exception_handler=None):
         pool = Pool(10000)  # almost no limit, limit connections instead
         job_queue = JoinableQueue()
         data_queue = JoinableQueue()
@@ -213,8 +220,7 @@ class Scraper(object):
                 job.log.debug(traceback.format_exc())
                 # FIXME: throttle
             except TemporaryError as e:
-                job.log.warning('Temporary failure on %s, '
-                                         'rescheduling')
+                job.log.warning('Temporary failure on %s, ' 'rescheduling')
                 job.log.debug(traceback.format_exc())
                 job_queue.put(job.retry())
                 # FIXME: add limit for retries
@@ -225,10 +231,9 @@ class Scraper(object):
                 job.log.critical(e)
                 job.log.debug(traceback.format_exc())
                 job.log.debug('Aborting scrape...')
-                aborted = True
             except Exception as e:
                 job.log.error('Error handling job "%s" "%s": %s' %
-                                       (scraper_name, url, e))
+                              (scraper_name, url, e))
                 job.log.debug(traceback.format_exc())
                 if exception_handler:
                     exception_handler(sys.exc_info())
@@ -239,14 +244,14 @@ class Scraper(object):
             # using the pool, spawns a new job for every job in the queue
             while not aborted:
                 job = job_queue.get()
-                if None == job:
+                if job is None:
                     break
                 pool.spawn(run_job, job)
 
         def receiver_spawner():
             while not aborted:
                 record = data_queue.get()
-                if None == record:
+                if record is None:
                     break
 
                 for receiver in receivers:

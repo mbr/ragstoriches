@@ -8,6 +8,7 @@ from ragstoriches.scraper import Scraper
 
 scraper = Scraper(__name__)
 
+
 @scraper
 def index(requests, url='http://eastidaho.craigslist.org/search/act?query=+'):
     html = document_fromstring(requests.get(url).content)
@@ -26,7 +27,8 @@ def posting(requests, url, push_data):
 
     push_data('posting', {
         'title': html.cssselect('.postingtitle')[0].text.strip(),
-        'id': re.findall(r'\d+', html.cssselect('div.postinginfos p')[0].text)[0],
+        'id':
+        re.findall(r'\d+', html.cssselect('div.postinginfos p')[0].text)[0],
         'date': html.cssselect('.postinginfos date')[0].text.strip(),
         'body': html.cssselect('#postingbody')[0].text_content().strip(),
     })

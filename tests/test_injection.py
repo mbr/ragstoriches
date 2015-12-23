@@ -78,7 +78,7 @@ def test_get_default_args():
         pass
 
     assert get_default_args(f1) == {}
-    assert get_default_args(f2) == { 'b': 'b_def', 'c': 'c_def' }
+    assert get_default_args(f2) == {'b': 'b_def', 'c': 'c_def'}
     assert get_default_args(f3) == {}
-    assert get_default_args(f4) == { 'a': 'a_def', 'b': 'b_def'}
+    assert get_default_args(f4) == {'a': 'a_def', 'b': 'b_def'}
     assert get_default_args(f5) == {}
