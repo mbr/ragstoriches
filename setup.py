@@ -11,7 +11,7 @@ def read(fname):
 
 
 setup(name='ragstoriches',
-      version='0.3.1dev',
+      version='0.4.1dev',
       description='Develop highly-concurrent web scrapers, easily.',
       long_description=read('README.rst'),
       author='Marc Brinkmann',
